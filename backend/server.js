@@ -12,7 +12,7 @@ const {generateConceptExplanation,generateInterviewQuestions}=require("./control
 const app=express();
 app.use(
     cors({
-        origin:"*",
+        origin:"https://interview-prep-frontend-tg28.onrender.com",
         methods:["GET","POST","PUT","DELETE"],
         allowedHeaders:["Content-Type","Authorization"]
     })
