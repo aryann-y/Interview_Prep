@@ -83,6 +83,8 @@ const retryWithBackoff = require("../utils/retryWithBackoff");
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+
 async function generateInterviewQuestions(req, res) {
   try {
     const { role, experience, topicsToFocus, numberOfQuestions } = req.body;
@@ -95,13 +97,13 @@ async function generateInterviewQuestions(req, res) {
 
     const response = await retryWithBackoff(() =>
       ai.models.generateContent({
-        model: "gemini-2.0-flash-lite",
+        model: GEMINI_MODEL,
         contents: prompt,
       })
     );
 
     let rawText = response.text;
-    console.log(rawText);
+    console.log("Raw AI response:", rawText);
 
     const cleanedText = rawText
       .replace(/^```json\s*|\s*```$/g, "")
@@ -116,11 +118,25 @@ async function generateInterviewQuestions(req, res) {
   } catch (error) {
     console.error("generateInterviewQuestions error:", error);
 
+    const msg = (error?.message || "").toLowerCase();
+    const status =
+      error?.status ||
+      error?.statusCode ||
+      error?.code ||
+      error?.response?.status ||
+      "";
+
     const isRateLimit =
-      error?.status === 429 ||
-      error?.message?.includes("429") ||
-      error?.message?.includes("quota") ||
-      error?.message?.includes("rate");
+      status === 429 ||
+      status === "429" ||
+      status === "RESOURCE_EXHAUSTED" ||
+      msg.includes("429") ||
+      msg.includes("quota") ||
+      msg.includes("rate") ||
+      msg.includes("resource_exhausted") ||
+      msg.includes("too many requests") ||
+      msg.includes("exhausted") ||
+      msg.includes("limit");
 
     if (isRateLimit) {
       return res.status(503).json({
@@ -147,7 +163,7 @@ const generateConceptExplanation = async (req, res) => {
 
     const response = await retryWithBackoff(() =>
       ai.models.generateContent({
-        model: "gemini-2.0-flash-lite",
+        model: GEMINI_MODEL,
         contents: prompt,
       })
     );
@@ -167,11 +183,25 @@ const generateConceptExplanation = async (req, res) => {
   } catch (error) {
     console.error("generateConceptExplanation error:", error);
 
+    const msg = (error?.message || "").toLowerCase();
+    const status =
+      error?.status ||
+      error?.statusCode ||
+      error?.code ||
+      error?.response?.status ||
+      "";
+
     const isRateLimit =
-      error?.status === 429 ||
-      error?.message?.includes("429") ||
-      error?.message?.includes("quota") ||
-      error?.message?.includes("rate");
+      status === 429 ||
+      status === "429" ||
+      status === "RESOURCE_EXHAUSTED" ||
+      msg.includes("429") ||
+      msg.includes("quota") ||
+      msg.includes("rate") ||
+      msg.includes("resource_exhausted") ||
+      msg.includes("too many requests") ||
+      msg.includes("exhausted") ||
+      msg.includes("limit");
 
     if (isRateLimit) {
       return res.status(503).json({
